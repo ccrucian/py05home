@@ -46,7 +46,6 @@ class NumericProcessor(DataProcessor):
         if not self.validate(data):
             raise TestInvalid("Improper numeric data")
         if isinstance(data, (int, float)):
-            self.rank += 1
             self.data.append((self.rank, str(data)))
         elif isinstance(data, list):
             for i in data:
