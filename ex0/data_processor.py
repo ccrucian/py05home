@@ -50,8 +50,8 @@ class NumericProcessor(DataProcessor):
             self.data.append((self.rank, str(data)))
         elif isinstance(data, list):
             for i in data:
-                self.rank += 1
                 self.data.append((self.rank, str(i)))
+                self.rank += 1
 
 
 class TextProcessor(DataProcessor):
@@ -70,12 +70,16 @@ def main() -> None:
     numeri.validate(42)
     numeri.validate("Hello")
     string = "foo"
+    values = [434, 6, 3, 4]
     print(
         f"Test invalid ingestion of string '{string}' without prior validation:")
     try:
-        numeri.ingest(45)
+        numeri.ingest(values)
     except TestInvalid as e:
         print(f"Got exception: {e}")
+    while numeri.data:
+        rank, value = numeri.output()
+        print(f"Numeric value {rank}: {value}")
 
 
 if __name__ == "__main__":
