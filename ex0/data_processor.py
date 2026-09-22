@@ -54,7 +54,12 @@ class NumericProcessor(DataProcessor):
 
 
 class TextProcessor(DataProcessor):
-    pass
+    def validate(self, data: typing.Any) -> bool:
+        if isinstance(data, str):
+            return True
+        if isinstance(data, list):
+            return len(data) > 0 and all(isinstance(x, str) for x in data)
+        return False
 
 
 class LogProcessor(DataProcessor):
