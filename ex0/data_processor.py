@@ -77,6 +77,8 @@ def main() -> None:
         numeri.ingest(values)
     except TestInvalid as e:
         print(f"Got exception: {e}")
+    print(f"Processing data: [{', '.join(i[1] for i in numeri.data)}]")
+    print(f"Extracting {len(numeri.data)} values: ")
     while numeri.data:
         rank, value = numeri.output()
         print(f"Numeric value {rank}: {value}")
