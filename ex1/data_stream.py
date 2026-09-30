@@ -41,7 +41,10 @@ class NumericProcessor(DataProcessor):
                 valid = True
         return valid
 
-    def ingest(self, data: typing.Any) -> None:
+    def ingest(
+                self,
+                  data: int | float | list[int | float]
+                  ) -> None:
         if not self.validate(data):
             raise TestInvalid("Improper numeric data")
         if isinstance(data, (int, float)):
@@ -61,7 +64,7 @@ class TextProcessor(DataProcessor):
             return len(data) > 0 and all(isinstance(x, str) for x in data)
         return False
 
-    def ingest(self, data: typing.Any) -> None:
+    def ingest(self, data: str | list[str]) -> None:
         if not self.validate(data):
             raise TestInvalid("Improper type of data")
         if isinstance(data, str):
@@ -102,7 +105,10 @@ class LogProcessor(DataProcessor):
         else:
             return False
 
-    def ingest(self, data: typing.Any) -> None:
+    def ingest(
+                self,
+                data: dict[str, str] | list[dict[str, str]]
+                ) -> None:
         if not self.validate(data):
             raise TestInvalid("Improper type of data")
         if isinstance(data, dict):
@@ -135,7 +141,7 @@ class DataStream:
                     break
             if not found:
                 print(
-                    "Data stram error: - "
+                    "Data stream error: - "
                     f"Can't process element in stream: {element} "
                 )
 

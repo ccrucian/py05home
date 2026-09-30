@@ -42,7 +42,10 @@ class NumericProcessor(DataProcessor):
         print(f"Trying to validate input '{data}': {valid}")
         return valid
 
-    def ingest(self, data: typing.Any) -> None:
+    def ingest(
+            self,
+              data: int | float | list[int | float]
+              ) -> None:
         if not self.validate(data):
             raise TestInvalid("Improper numeric data")
         if isinstance(data, (int, float)):
@@ -62,7 +65,7 @@ class TextProcessor(DataProcessor):
             return len(data) > 0 and all(isinstance(x, str) for x in data)
         return False
 
-    def ingest(self, data: typing.Any) -> None:
+    def ingest(self, data: str | list[str]) -> None:
         if not self.validate(data):
             raise TestInvalid("Improper type of data")
         if isinstance(data, str):
@@ -103,7 +106,10 @@ class LogProcessor(DataProcessor):
         else:
             return False
 
-    def ingest(self, data: typing.Any) -> None:
+    def ingest(
+                self,
+                data: dict[str, str] | list[dict[str, str]]
+                ) -> None:
         if not self.validate(data):
             raise TestInvalid("Improper type of data")
         if isinstance(data, dict):
@@ -130,7 +136,7 @@ def main() -> None:
         f"Test invalid ingestion of string '{string}'"
         "without prior validation:")
     try:
-        numeri.ingest(string)
+        numeri.ingest(values)
     except TestInvalid as e:
         print(f"Got exception: {e}")
     print(f"Processing data: [{', '.join(i[1] for i in numeri.processed)}]")
