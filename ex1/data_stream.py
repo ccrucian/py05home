@@ -39,7 +39,6 @@ class NumericProcessor(DataProcessor):
                     ) for dato in data
                             ):
                 valid = True
-        print(f"Trying to validate input '{data}': {valid}")
         return valid
 
     def ingest(self, data: typing.Any) -> None:
@@ -117,69 +116,77 @@ class LogProcessor(DataProcessor):
                 self.rank += 1
 
 
+class DataStream:
+    def __init__(self) -> None:
+        self.processors: list[DataProcessor] = []
+
+    def register_processor(self, proc: DataProcessor) -> None:
+        self.processors.append(proc)
+        print(f"Registering {type(proc).__name__}")
+
+    def process_stream(self, stream: list[typing.Any]) -> None:
+
+        for element in stream:
+            found = False
+            for proc in self.processors:
+                if proc.validate(element):
+                    proc.ingest(element)
+                    found = True
+                    break
+            if not found:
+                print(
+                    "Data stram error: - "
+                    f"Can't process element in stream: {element} "
+                )
+
+    def print_processors_stats(self) -> None:
+        print("== DataStream statistics ==")
+        if not self.processors:
+            print("No processor found, no data")
+            return
+
+        for processor in self.processors:
+            print(f"{type(processor).__name__}: "
+                  f"total {processor.rank} items processed,"
+                  f" remainig {len(processor.processed)}"
+                  )
+
+
 def main() -> None:
-    print("=== Code Nexus - Data Processor ===")
+    print("=== Code Nexus - Data Stream ===")
 
-    print("Testing Numeric Processor...")
-    numeri = NumericProcessor()
-    numeri.validate(42)
-    numeri.validate("Hello")
-    string = "foo"
-    values = [434, 6, 3, 4]
-    print(
-        f"Test invalid ingestion of string '{string}'"
-        "without prior validation:")
-    try:
-        numeri.ingest(string)
-    except TestInvalid as e:
-        print(f"Got exception: {e}")
-    print(f"Processing data: [{', '.join(i[1] for i in numeri.processed)}]")
-    print(f"Extracting {len(numeri.processed)} values: ")
-    while numeri.processed:
-        rank, value = numeri.output()
-        print(f"Numeric value {rank}: {value}")
+    x = NumericProcessor()
+    y = TextProcessor()
+    z = LogProcessor()
+    obj = DataStream()
+    stream = [
+        'Hello world', [3.14, -1, 2.71],
+        [{'log_level': 'WARNING',
+         'log_message': 'Telnet access! Use ssh instead'},
+         {'log_level': 'INFO', 'log_message': 'User wil isconnected'}], 42,
+        ['Hi', 'five']]
+    obj.register_processor(x)
+    obj.process_stream(stream)
+    obj.print_processors_stats()
 
-    print("Testing Text Processor...")
-    texting = TextProcessor()
-    text_in = 42
-    text_l = ["Hello", "World", "!"]
-    print(f"Trying to validate input '{text_in}': {texting.validate(text_in)}")
-    print(
-            f"Test invalid ingestion of string '{text_in}'"
-            "without prior validation:")
-    try:
-        texting.ingest(text_in)
-    except TestInvalid as e:
-        print(f"Got exception: {e}")
-    print(
-        f"Processing data: {text_l}"
-    )
-    try:
-        texting.ingest(text_l)
-    except TestInvalid as e:
-        print(f"Got exception: {e}")
-    n = 1
-    print(f"Extracting {n} value...")
-    for i in range(n):
-        rank, text = texting.output()
-        print(f"Text value {rank}: {text}")
+    print("Registering other data processors\nSend the same batch again")
+    obj.register_processor(y)
+    obj.register_processor(z)
+    obj.process_stream(stream)
+    obj.print_processors_stats()
 
-    print("Texting Log Processor")
-    logging = LogProcessor()
-    strlog = "Hello"
-    log = [
-        {'log_level': 'NOTICE', 'log_message': 'Connection to server'},
-        {'log_level': 'ERROR', 'log_message': 'Unauthorized access!!'}
-        ]
-    print(f"Trying to validate input '{strlog}': {logging.validate(strlog)}")
-    try:
-        logging.ingest(log)
-    except TestInvalid as e:
-        print(f"Got exception: {e}")
-    print(f"Processing data: {log}")
-    while logging.processed:
-        a, b = logging.output()
-        print(f"Log entry {a}: {b}")
+    print("Consume some elements from the data processors:")
+
+    for i in range(3):
+        x.output()
+
+    for i in range(2):
+        y.output()
+
+    for i in range(1):
+        z.output()
+
+    obj.print_processors_stats()
 
 
 if __name__ == "__main__":
