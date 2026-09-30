@@ -43,8 +43,8 @@ class NumericProcessor(DataProcessor):
 
     def ingest(
                 self,
-                  data: int | float | list[int | float]
-                  ) -> None:
+                data: int | float | list[int | float]
+                ) -> None:
         if not self.validate(data):
             raise TestInvalid("Improper numeric data")
         if isinstance(data, (int, float)):
@@ -126,6 +126,7 @@ class ExportPlugin(typing.Protocol):
     def process_output(self, data: list[tuple[int, str]]) -> None:
         ...
 
+
 class DataStream:
     def __init__(self) -> None:
         self.processors: list[DataProcessor] = []
@@ -172,15 +173,23 @@ class DataStream:
                 plugin.process_output(data)
 
 
-class CSVplugin():
-    def process_output(self, data: list[tuple[int, str]) -> None:
+class CSVplugin:
+    def process_output(self, data: list[tuple[int, str]]) -> None:
         values = []
         for item in data:
-            i = item[0]
             value = item[1]
             values.append(value)
         print("CSV Output:")
         print(",".join(values))
+
+
+class JSONPlugin:
+    def process_output(self, data: list[tuple[int, str]]) -> None:
+        values: list[str] = []
+        for a, b in data:
+            values.append(f"'Item_{a}': '{b}'")
+        print("JSON Output:")
+        print("{" + ",".join(values) + "}")
 
 
 def main() -> None:
@@ -220,7 +229,7 @@ def main() -> None:
     obj.process_stream(stream)
     obj.print_processors_stats()
 
-    csv_plugin = CSVExportPlugin()
+    csv_plugin = CSVplugin()
 
     print(
         "Send 3 processed data from each processor "
@@ -230,6 +239,36 @@ def main() -> None:
 
     obj.print_processors_stats()
 
+    stream2 = [
+        21,
+        ["I love AI", "LLMs are wonderful", "Stay healthy"],
+        [
+            {
+                "log_level": "ERROR",
+                "log_message": "500 server crash"
+            },
+            {
+                "log_level": "NOTICE",
+                "log_message": "Certificate expires in 10 days"
+            }
+        ],
+        [32, 42, 64, 84, 128, 168],
+        "World hello"
+        ]
+
+    print(f"Send another batch of data: {stream2}")
+    obj.process_stream(stream2)
+    obj.print_processors_stats()
+    json_plugin = JSONPlugin()
+
+    print(
+        "Send 5 processed data from each processor "
+        "to a JSON plugin:"
+        )
+
+    obj.output_pipeline(5, json_plugin)
+
+    obj.print_processors_stats()
 
 
 if __name__ == "__main__":
