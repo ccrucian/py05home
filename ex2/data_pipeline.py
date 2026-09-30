@@ -146,7 +146,7 @@ class DataStream:
                     break
             if not found:
                 print(
-                    "Data stram error: - "
+                    "Data stream error: - "
                     f"Can't process element in stream: {element} "
                 )
 
