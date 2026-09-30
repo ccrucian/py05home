@@ -10,7 +10,7 @@ class DataProcessor(abc.ABC):
     def __init__(self) -> None:
         self.processed: list[tuple[int, str]] = []
         self.rank: int = 0
-  
+
     @abc.abstractmethod
     def validate(self, data: typing.Any) -> bool:
         pass
@@ -47,6 +47,7 @@ class NumericProcessor(DataProcessor):
             raise TestInvalid("Improper numeric data")
         if isinstance(data, (int, float)):
             self.processed.append((self.rank, str(data)))
+            self.rank += 1
         elif isinstance(data, list):
             for i in data:
                 self.processed.append((self.rank, str(i)))
@@ -62,31 +63,32 @@ class TextProcessor(DataProcessor):
         return False
 
     def ingest(self, data: typing.Any) -> None:
-            if not self.validate(data):
-                raise TestInvalid("Improper type of data")
-            if isinstance(data, str):
-                self.processed.append((self.rank, data))
+        if not self.validate(data):
+            raise TestInvalid("Improper type of data")
+        if isinstance(data, str):
+            self.processed.append((self.rank, data))
+            self.rank += 1
+        else:
+            for dato in data:
+                self.processed.append((self.rank, dato))
                 self.rank += 1
-            else:
-                for dato in data:
-                    self.processed.append((self.rank, dato))
-                    self.rank += 1
 
 
 class LogProcessor(DataProcessor):
     def validate(self, data: typing.Any) -> bool:
-        if isinstance(data, dict) and (
-            all(isinstance(key, str)) and isinstance(value, str) 
-            for key, value in data.items()):
-            return True
-        elif isinstance(data, list) and (all(
-            isinstance(item, dict) and all(
-                isinstance(key, str) and isinstance(value, str)
-                for key, value in item.items()
+        if isinstance(data, dict):
+            return all(
+                (isinstance(key, str)) and isinstance(value, str)
+                for key, value in data.items()
             )
-            for item in data
-        )):
-            return True
+        if isinstance(data, list):
+            return all(
+                isinstance(item, dict) and all(
+                    isinstance(key, str) and isinstance(value, str)
+                    for key, value in item.items()
+                )
+                for item in data
+                )
         else:
             return False
 
@@ -94,10 +96,14 @@ class LogProcessor(DataProcessor):
         if not self.validate(data):
             raise TestInvalid("Improper type of data")
         if isinstance(data, dict):
+            log = f"{data['log_level']}: {data['log_message']}"
+            self.processed.append((self.rank, log))
+            self.rank += 1
+        elif isinstance(data, list):
             for item in data:
-                self.processed.append(self.rank, item)
+                log = f"{item['log_level']}: {item['log_message']}"
+                self.processed.append((self.rank, log))
                 self.rank += 1
-
 
 
 def main() -> None:
@@ -110,7 +116,8 @@ def main() -> None:
     string = "foo"
     values = [434, 6, 3, 4]
     print(
-        f"Test invalid ingestion of string '{string}' without prior validation:")
+        f"Test invalid ingestion of string '{string}'"
+        "without prior validation:")
     try:
         numeri.ingest(values)
     except TestInvalid as e:
@@ -127,7 +134,8 @@ def main() -> None:
     text_l = ["Hello", "World", "!"]
     print(f"Trying to validate input '{text_in}': {texting.validate(text_in)}")
     print(
-            f"Test invalid ingestion of string '{text_in}' without prior validation:")
+            f"Test invalid ingestion of string '{text_in}'"
+            "without prior validation:")
     try:
         texting.ingest(text_in)
     except TestInvalid as e:
@@ -148,9 +156,20 @@ def main() -> None:
     print("Texting Log Processor")
     logging = LogProcessor()
     strlog = "Hello"
+    log = [
+        {'log_level': 'NOTICE', 'log_message': 'Connection to server'},
+        {'log_level': 'ERROR', 'log_message': 'Unauthorized access!!'}
+        ]
     print(f"Trying to validate input '{strlog}': {logging.validate(strlog)}")
-
-
+    print(f"Trying to validate input '{strlog}': {logging.validate(strlog)}")
+    try:
+        logging.ingest(log)
+    except TestInvalid as e:
+        print(f"Got exception: {e}")
+    print(f"Processing data: {log}")
+    while logging.processed:
+        a, b = logging.output()
+        print(f"Log entry {a}: {b}")
 
 
 if __name__ == "__main__":
